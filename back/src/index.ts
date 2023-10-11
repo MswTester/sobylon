@@ -12,15 +12,15 @@ app.get('/', (req,res) => {
 const server = app.listen(3000)
 const io = new Server(server)
 
-let world:{[key:string]:number[]} = {}
+let world:{[key:string]:number[][]} = {}
 
 io.on('connection', socket => {
     console.log('connected', socket.id)
-    world[socket.id] = [0,5,0]
+    world[socket.id] = [[0,5,0],[0,0,0]]
     socket.emit('init', world)
-    socket.on('update', (pos:number[]) => {
-        world[socket.id] = pos
-        socket.broadcast.emit('update', socket.id, pos)
+    socket.on('update', (pos:number[], velocity:number[]) => {
+        world[socket.id] = [pos, velocity]
+        socket.broadcast.emit('update', socket.id, pos, velocity)
     })
     socket.on('disconnect', () => {
         console.log('disconnected', socket.id)
