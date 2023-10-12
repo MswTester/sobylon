@@ -17,6 +17,7 @@
     "socket.io-client": "^4.5.1"
   },
   "devDependencies": {
+    "@types/babylonjs": "^2.4.1",
     "@types/cannon": "^0.1.10",
     "css-loader": "^6.7.1",
     "html-webpack-plugin": "^5.5.0",

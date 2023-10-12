@@ -86,10 +86,10 @@ const initGame = (thisWorld:World) => {
     // BABYLON.SceneLoader.Append()
     const ground = createMap(scene, maps['default'], shadowGenerator)
 
-    const importObj = (url:string, name:string) => {
-        BABYLON.SceneLoader.Append(url, name+'.obj', scene, () => {});
-    }
-    importObj('obj/map', 'mainmap')
+    // const importObj = (url:string, name:string) => {
+    //     BABYLON.SceneLoader.Append(url, name+'.obj', scene, () => {});
+    // }
+    // importObj('obj/map', 'mainmap')
     
     // jump vars
     const jumpDiv = document.querySelector('.jump > div') as HTMLDivElement
@@ -285,8 +285,10 @@ const initGame = (thisWorld:World) => {
     });
     server.on('disconnected', (id:string) => {
         const sph = scene.getMeshByName(id);
-        if (sph) {
+        const plane = scene.getMeshByName(`${id}-plane`);
+        if (sph && plane) {
             sph.dispose();
+            plane.dispose();
         }
         delete world.players[id];
     });
