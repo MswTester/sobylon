@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="kr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1, minimum-scale=1">
+    <title>Sobylon</title>
+    <style>
+        *{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+    }
+    html,body{
+        overflow: hidden;
+        margin: 0;
+        width: 100vw;
+        height: 100vh;
+    }
+    canvas{
+        width: 100%;
+        height: 100%;
+    }
+    .hide{
+        display: none !important;
+    }
+    button{
+        cursor: pointer;
+    }
+    .mobile-layout{
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 50vw;
+        height: 100%;
+    }
+    .joystick{
+        position: absolute;
+        transform: translate(-50%, -50%);
+        width: 100px;
+        height: 100px;
+        border-radius: 100px;
+        background-color: rgba(0, 0, 0, 0.3);
+    }
+    .joystick-button{
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 50px;
+        height: 50px;
+        border-radius: 50px;
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+    .jump{
+        position: fixed;
+        right: 10px;
+        bottom: 10px;
+        width: 100px;
+        height: 100px;
+        border-radius: 10px;
+        background-color: transparent;
+        border: 1px white solid;
+        color: white;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+        font-size: 20px;
+        font-weight: bold;
+    }
+    .jump > div{
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        background-color: rgba(0, 255, 255, 0.4);
+        width: 100%;
+        border-radius: 10px;
+    }
+    .main{
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        text-align: center;
+        user-select: none;
+        height: 100%;
+    }
+    .main > .title{
+        font-weight: 900;
+        font-size: min(10vw, 100px);
+        cursor: default;
+        margin: auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .main > div{
+        margin: auto;
+        height: 70%;
+        width: 100%;
+    }
+    .main > div > select.texture{
+        width: max(50%, 200px);
+        margin: auto;
+        height: 50px;
+        border-radius: 10px;
+        background-color: rgba(0, 0, 0, 0.2);
+        border: 0;
+        font-size: 20px;
+        text-align: center;
+        color: white;
+        font-weight: bold;
+        display: block;
+    }
+    input.nickname{
+        width: max(50%, 200px);
+        margin: auto;
+        height: 50px;
+        border-radius: 10px;
+        background-color: rgba(0, 0, 0, 0.3);
+        border: 0;
+        font-size: 20px;
+        text-align: center;
+        color: white;
+        font-weight: bold;
+        display: block;
+    }
+    button.start{
+        width: max(50%, 200px);
+        margin: auto;
+        height: 50px;
+        border-radius: 10px;
+        border: 0;
+        font-size: 20px;
+        text-align: center;
+        color: white;
+        font-weight: bold;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: block;
+    }
+    .rooms{
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        text-align: center;
+        user-select: none;
+    }
+    div.popup{
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: max(50%, 200px);
+        height: max(50%, 200px);
+        border-radius: 10px;
+        border: 0;
+        background-color: rgba(0, 0, 0, 0.4);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        text-align: center;
+        user-select: none;
+    }
+    div.popup > input, div.popup > button, div.popup > select{
+        font-size: large;
+        border-radius: 10px;
+        border: 0;
+        background-color: rgba(255, 255, 255, 0.2);
+        outline: none;
+        padding: 10px;
+        width: 90%;
+        margin: auto;
+        font-weight: bold;
+        color: white;
+    }
+    button.popup{
+        width: max(50%, 200px);
+        margin: 10px auto;
+        height: 50px;
+        border-radius: 10px;
+        border: 0;
+        font-size: 20px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        background-color: rgba(0, 0, 0, 0.3);
+        display: block;
+    }
+    div.back{
+        background-color: rgba(0, 0, 0, 0.3);
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+    }
+    .rooms > .container > div.room{
+        background-color: rgba(0, 0, 0, 0.4);
+        width: 80%;
+        margin: 10px auto;
+        border-radius: 10px;
+        color: white;
+    }
+    div.room > div{
+        padding: 10px;
+        font-weight: bold;
+        font-size: large;
+    }
+    div.room > div.title{
+        font-size: x-large;
+    }
+    div.room > div.map{
+        color: aqua;
+    }
+    div.room > div.players{
+        color: yellow;
+    }
+    div.room > button.join{
+        width: 100%;
+        height: 50px;
+        border-radius: 10px;
+        border: 0;
+        font-size: 20px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        background-color: rgba(0, 0, 0, 0.3);
+        display: block;
+    }
+    div.inRoom{
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        text-align: center;
+        user-select: none;
+        height: 100%;
+        width: 100%;
+    }
+    .inRoom > .menu{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        background-color: rgba(0, 0, 0, 0.5);
+        flex: 1;
+    }
+    .inRoom > .menu > div {
+        flex: 1;
+        height: 100%;
+        font-size: x-large;
+        font-weight: bold;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .inRoom > .container{
+        flex: 8;
+        background-color: rgba(0, 0, 0, 0.3);
+        overflow-y: scroll;
+        overflow: hidden;
+    }
+    .inRoom > .container > div.player{
+        padding: 10px;
+        font-weight: bold;
+        font-size: large;
+        color: white;
+        margin: 10px;
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+    }
+    .inRoom > button.init-game{
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 50px;
+        padding: 10px;
+        border: 0;
+        font-size: 20px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: block;
+    }
+    </style>
+<script defer src="runtime.js"></script><script defer src="vendors.js"></script><script defer src="bundle.js"></script></head>
+<body>
+    <div class="main">
+        <div class="title">Sobylon</div>
+        <div>
+            <input type="text" name="" id="" placeholder="Nickname" class="nickname">
+            <select name="" id="" class="texture">
+                <option value="red">Red</option>
+                <option value="yellow">Yellow</option>
+                <option value="green">Green</option>
+                <option value="megenta">Magenta</option>
+                <option value="aqua">Aqua</option>
+                <option value="metal">Metal</option>
+                <option value="granite">Granite</option>
+                <option value="square_tile">Square Tile</option>
+            </select>
+            <button class="start">Start</button>
+        </div>
+    </div>
+    <div class="rooms hide">
+        <button class="popup">Create Room</button>
+        <div class="container"></div>
+        <div class="back hide"></div>
+        <div class="popup hide">
+            <input type="text" class="roomname" placeholder="Room Name">
+            <input type="number" class="players" placeholder="Max Player" value="10">
+            <select name="" id="" class="map">
+                <option value="default">Default</option>
+            </select>
+            <button class="create">Create</button>
+        </div>
+    </div>
+    <div class="inRoom hide">
+        <div class="menu">
+            <div>Players</div>
+            <div class="settings hide">Settings</div>
+        </div>
+        <div class="container">
+            <div>nickname</div>
+        </div>
+        <button class="init-game hide">Start</button>
+    </div>
+    <canvas id="renderCanvas" class="hide"></canvas>
+    <div class="mobile-layout hide">
+        <div class="joystick hide">
+            <div class="joystick-button"></div>
+        </div>
+    </div>
+    <div class="jump hide"><div></div>JUMP</div>
+</body>
+</html>
