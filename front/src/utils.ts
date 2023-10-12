@@ -1,16 +1,7 @@
 import * as BABYLON from 'babylonjs';
 import { Map } from "./map";
 
-export const red = new BABYLON.Color3(1, 0, 0);
-export const green = new BABYLON.Color3(0, 1, 0);
-export const blue = new BABYLON.Color3(0, 0, 1);
-export const cyan = new BABYLON.Color3(0, 1, 1);
-export const magenta = new BABYLON.Color3(1, 0, 1);
-export const yellow = new BABYLON.Color3(1, 1, 0);
-export const black = new BABYLON.Color3(0, 0, 0);
-export const white = new BABYLON.Color3(1, 1, 1);
-
-export const createMap = (scene:BABYLON.Scene, map:Map, shadowGenerator:BABYLON.ShadowGenerator) => {
+export const createMap = (scene:BABYLON.Scene, map:Map, shadowGenerator:BABYLON.ShadowGenerator):BABYLON.GroundMesh => {
     const ground = BABYLON.MeshBuilder.CreateGround('ground', { width: map.width, height: map.height }, scene);
     const groundMat = new BABYLON.StandardMaterial('groundMat', scene);
     groundMat.diffuseColor = map.color
@@ -29,4 +20,5 @@ export const createMap = (scene:BABYLON.Scene, map:Map, shadowGenerator:BABYLON.
         box.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.5, friction:1 }, scene);
         shadowGenerator.getShadowMap().renderList.push(box);
     })
+    return ground
 }
