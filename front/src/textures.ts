@@ -4,7 +4,7 @@ export const colors = {
     red : new BABYLON.Color3(1, 0, 0),
     green : new BABYLON.Color3(0, 1, 0),
     blue : new BABYLON.Color3(0, 0, 1),
-    cyan : new BABYLON.Color3(0, 1, 1),
+    aqua : new BABYLON.Color3(0, 1, 1),
     magenta : new BABYLON.Color3(1, 0, 1),
     yellow : new BABYLON.Color3(1, 1, 0),
     black : new BABYLON.Color3(0, 0, 0),

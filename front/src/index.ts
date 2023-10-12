@@ -6,7 +6,8 @@ import { createMap } from './utils';
 import { maps } from './map';
 import { getGraniteMat, getMaterial, getMetalMat, getSquareTileMat } from './textures';
 import { World } from './types'
-import 'babylonjs-loaders'
+import 'babylonjs-loaders/babylon.objFileLoader'
+import { OBJFileLoader } from 'babylonjs-loaders';
 
 const server = io('/')
 
@@ -18,7 +19,7 @@ const isMobile = ():boolean => {
 
 let myWorld:World|null = null
 
-const initGame = (thisWorld:World) => {
+const initGame = async (thisWorld:World) => {
     // variables initialization
     let inputKeys:string[] = []
     let world:World = thisWorld;
@@ -83,19 +84,17 @@ const initGame = (thisWorld:World) => {
     shadowGenerator.getShadowMap().renderList.push(sphere);
     
     // map (ground)
-    // BABYLON.SceneLoader.Append()
     const ground = createMap(scene, maps['default'], shadowGenerator)
 
-    // const importObj = (url:string, name:string) => {
-    //     BABYLON.SceneLoader.Append(url, name+'.obj', scene, () => {});
-    // }
-    // importObj('obj/map', 'mainmap')
-    
+    const newMeshes = (await BABYLON.SceneLoader.ImportMeshAsync('', 'obj/', 'map2.gltf', scene)).meshes as BABYLON.Mesh[]
+
+    // continue with : https://playground.babylonjs.com/#R791PH#15
+
     // jump vars
     const jumpDiv = document.querySelector('.jump > div') as HTMLDivElement
     let isJumping = true;
     let jumpTimeStamp = 0;
-    
+
     // loop
     engine.runRenderLoop(() => {
         timer++;
@@ -251,6 +250,7 @@ const initGame = (thisWorld:World) => {
         nickTexture.addControl(nickText);
     }
 
+    let started = false;
     // socket.io
     server.emit('init', world.ownerId)
     server.on('init', (data: World) => {
@@ -261,10 +261,11 @@ const initGame = (thisWorld:World) => {
             const velocity = world.players[id].velocity;
             createEnemy(id, pos, velocity);
         });
+        started = true;
     });
     console.log(world)
     server.on('update', (id:string, pos:number[], velocity:number[]) => {
-        if(world.players[id]){
+        if(started && world.players[id]){
             world.players[id].position = pos;
             world.players[id].velocity = velocity;
             if(id === server.id) return;
