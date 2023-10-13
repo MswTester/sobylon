@@ -5,7 +5,8 @@
   "main": "back/dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node back/dist/index.js"
+    "start": "node back/dist/index.js",
+    "build": "echo \"dd\""
   },
   "author": "",
   "license": "ISC"
