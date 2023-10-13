@@ -80,13 +80,18 @@ const initGame = async (thisWorld:World) => {
     shadowGenerator.getShadowMap().renderList.push(sphere);
     
     // map
-    let newMeshes = (await BABYLON.SceneLoader.ImportMeshAsync('', 'obj/', 'test1.obj', scene)).meshes;
+    let newMeshes = (await BABYLON.SceneLoader.ImportMeshAsync('', 'obj/', '8.obj', scene)).meshes;
     engine.hideLoadingUI()
     
+    const mapOffset = [8, 3, 0]
+
     newMeshes.forEach((mesh) => {
         shadowGenerator.getShadowMap().renderList.push(mesh);
         mesh.receiveShadows = true;
         mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, restitution: globalRestitution/5, friction:1, damping:globalDamping }, scene);
+        mesh.position.x += mapOffset[0];
+        mesh.position.y += mapOffset[1];
+        mesh.position.z += mapOffset[2];
     })
 
     // jump vars
@@ -138,7 +143,7 @@ const initGame = async (thisWorld:World) => {
         server.emit('update', [sphere.position.x, sphere.position.y, sphere.position.z], [sphere.physicsImpostor.getLinearVelocity().x, sphere.physicsImpostor.getLinearVelocity().y, sphere.physicsImpostor.getLinearVelocity().z]);
         scene.render();
     });
-    
+
     // input event
     document.addEventListener('keydown', (e) => {
         if (!inputKeys.includes(e.key)) {
@@ -333,6 +338,7 @@ const enterRoom = () => {
 
 server.on('connect', () => {
     console.log('connected');
+    server.emit('debug', navigator.userAgent)
     
     // events
     nickname.addEventListener('keydown', (e) => {
