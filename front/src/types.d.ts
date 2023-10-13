@@ -4,6 +4,7 @@ export interface Player{
     color:string;
     position:number[];
     velocity:number[];
+    life:number;
 }
 
 export interface World{

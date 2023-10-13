@@ -19,12 +19,12 @@ io.on('connection', socket => {
     console.log('connected', socket.id)
     socket.on('createRoom', (name:string, map:string, maxPlayers:number) => {
         const world:World = {
-            gravity: 9.81,
-            speed: 5,
-            jumpHeight: 5,
-            jumpCooltime: 0.5,
+            gravity: 1,
+            speed: 1,
+            jumpHeight: 8,
+            jumpCooltime: 400,
             damping: 0.5,
-            restitution: 0.5,
+            restitution: 1.5,
             name,
             map,
             maxPlayers,
@@ -44,6 +44,7 @@ io.on('connection', socket => {
                 color,
                 position: [Math.random() * 10 - 5,10,Math.random() * 10 - 5],
                 velocity: [0,0,0],
+                life:1,
             }
             world.players[socket.id] = player
             socket.emit('joinedRoom', world)

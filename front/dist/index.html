@@ -270,6 +270,34 @@
         background-color: rgba(0, 0, 0, 0.2);
         border-radius: 10px;
     }
+    .inRoom > .container > div.settings{
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        color: white;
+        font-weight: bold;
+        font-size: large;
+        text-align: center;
+        height: calc(100% - 50px);
+    }
+    .inRoom > .container > div.settings > div{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 10px;
+    }
+    .inRoom > .container > div.settings > div > input{
+        width: max(200px, 50%);
+        height: 40px;
+        border-radius: 10px;
+        border: 0;
+        font-size: 20px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        background-color: rgba(0, 0, 0, 0.3);
+        display: block;
+    }
     .inRoom > button.init-game{
         position: absolute;
         bottom: 0;
@@ -319,12 +347,10 @@
     </div>
     <div class="inRoom hide">
         <div class="menu">
-            <div>Players</div>
-            <div class="settings hide">Settings</div>
+            <div class="playersBtn">Players</div>
+            <div class="settingsBtn hide">Settings</div>
         </div>
-        <div class="container">
-            <div>nickname</div>
-        </div>
+        <div class="container"></div>
         <button class="init-game hide">Start</button>
     </div>
     <canvas id="renderCanvas" class="hide"></canvas>

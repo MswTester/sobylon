@@ -2,8 +2,6 @@ import { io, Socket } from 'socket.io-client';
 import * as BABYLON from 'babylonjs';
 import * as GUI from 'babylonjs-gui';
 import CANNON from 'cannon'
-import { createMap } from './utils';
-import { maps } from './map';
 import { getGraniteMat, getMaterial, getMetalMat, getSquareTileMat } from './textures';
 import { World } from './types'
 import 'babylonjs-loaders/babylon.objFileLoader'
@@ -24,13 +22,13 @@ const initGame = async (thisWorld:World) => {
     let world:World = thisWorld;
     let movingAngle:number|null = null
     
-    const globalDamping = 0.5;
-    const globalRestitution = 1.5;
+    const globalDamping = world.damping;
+    const globalRestitution = world.restitution;
     let camRadious = isMobile() ? innerWidth > innerHeight ? 13 : 20 : 10;
-    const speed = 0.2;
-    const jumpHeight = 8;
-    const jumpCoolTime = 400;
-    const nicknameOffset = 1.5;
+    const speed = world.speed*0.2;
+    const jumpHeight = world.jumpHeight;
+    const jumpCoolTime = world.jumpCooltime;
+    const nicknameOffset = 1.2;
     
     let timer = 0;
 
@@ -43,7 +41,7 @@ const initGame = async (thisWorld:World) => {
     canvas.classList.remove('hide')
     const engine = new BABYLON.Engine(canvas, true);
     const scene = new BABYLON.Scene(engine);
-    scene.enablePhysics(new BABYLON.Vector3(0, -9.81, 0), new BABYLON.CannonJSPlugin());
+    scene.enablePhysics(new BABYLON.Vector3(0, world.gravity*(-9.81), 0), new BABYLON.CannonJSPlugin());
     
     // my sphere
     const sphere = BABYLON.MeshBuilder.CreateSphere('sphere', {diameter:1, segments:16}, scene);
@@ -55,7 +53,6 @@ const initGame = async (thisWorld:World) => {
     sphere.physicsImpostor = sphereImposter;
     sphere.physicsImpostor.physicsBody.linearDamping = globalDamping;
 
-    
     // camera
     const camera = new BABYLON.ArcRotateCamera('Camera', 0, 0, 10, sphere.position, scene);
     camera.attachControl(canvas, true);
@@ -82,18 +79,14 @@ const initGame = async (thisWorld:World) => {
     shadowGenerator.useContactHardeningShadow = true;
     shadowGenerator.getShadowMap().renderList.push(sphere);
     
-    // map (ground)
-    // const ground = createMap(scene, maps['default'], shadowGenerator)
-
-    // https://playground.babylonjs.com/#0IRV8X
-    
+    // map
     let newMeshes = (await BABYLON.SceneLoader.ImportMeshAsync('', 'obj/', 'test1.obj', scene)).meshes;
     engine.hideLoadingUI()
     
     newMeshes.forEach((mesh) => {
         shadowGenerator.getShadowMap().renderList.push(mesh);
         mesh.receiveShadows = true;
-        mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, restitution: 0.01, friction:1, damping:100 }, scene);
+        mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, restitution: globalRestitution/5, friction:1, damping:globalDamping }, scene);
     })
 
     // jump vars
@@ -320,7 +313,8 @@ const maxPlayers = document.querySelector('input.players') as HTMLInputElement
 const inRoom = document.querySelector('.inRoom') as HTMLDivElement
 const inRoomContainer = document.querySelector('.inRoom > .container') as HTMLDivElement
 const startGame = document.querySelector('button.init-game') as HTMLButtonElement
-const settings = document.querySelector('div.settings') as HTMLDivElement
+const players = document.querySelector('div.playersBtn') as HTMLDivElement
+const settings = document.querySelector('div.settingsBtn') as HTMLDivElement
 
 const enterGame = () => {
     main.classList.add('hide')
@@ -360,6 +354,49 @@ server.on('connect', () => {
     back.addEventListener('mousedown', offPopup)
     back.addEventListener('touchstart', offPopup)
 
+    const loadPlayers = () => {
+        Object.keys(myWorld.players).forEach((id:string) => {
+            const player = myWorld.players[id]
+            const playerDiv = document.createElement('div')
+            playerDiv.classList.add('player')
+            playerDiv.innerText = player.nickname
+            playerDiv.style.color = player.color
+            inRoomContainer.appendChild(playerDiv)
+        })
+    }
+
+    const loadSettings = () => {
+        const set = document.createElement('div')
+        set.classList.add('settings')
+        set.innerHTML = `
+            <div class="gravity">
+                <label for="gravity">Gravity</label>
+                <input type="number" name="gravity" value="${myWorld.gravity}" step="0.1">
+            </div>
+            <div class="speed">
+                <label for="speed">Speed</label>
+                <input type="number" name="speed" value="${myWorld.speed}" step="0.1">
+            </div>
+            <div class="jumpHeight">
+                <label for="jumpHeight">Jump Height</label>
+                <input type="number" name="jumpHeight" value="${myWorld.jumpHeight}" step="0.1">
+            </div>
+            <div class="jumpCooltime">
+                <label for="jumpCooltime">Jump Cooltime</label>
+                <input type="number" name="jumpCooltime" value="${myWorld.jumpCooltime}" step="0.1">
+            </div>
+            <div class="damping">
+                <label for="damping">Damping</label>
+                <input type="number" name="damping" value="${myWorld.damping}" step="0.1">
+            </div>
+            <div class="restitution">
+                <label for="restitution">Restitution</label>
+                <input type="number" name="restitution" value="${myWorld.restitution}" step="0.1">
+            </div>
+        `
+        inRoomContainer.append(set)
+    }
+
     server.on('getRooms', (worlds:World[]) => {
         if(inRoom.classList.contains('hide')){
             container.innerHTML = ''
@@ -387,20 +424,23 @@ server.on('connect', () => {
             myWorld = worlds.find(world => world.ownerId === myWorld.ownerId)
             if(myWorld){
                 inRoomContainer.innerHTML = ''
-                Object.keys(myWorld.players).forEach((id:string) => {
-                    const player = myWorld.players[id]
-                    const playerDiv = document.createElement('div')
-                    playerDiv.classList.add('player')
-                    playerDiv.innerText = player.nickname
-                    playerDiv.style.color = player.color
-                    inRoomContainer.appendChild(playerDiv)
-                })
+                loadPlayers()
             } else {
                 inRoom.classList.add('hide')
                 rooms.classList.remove('hide')
                 myWorld = null
             }
         }
+    })
+
+    players.addEventListener('click', () => {
+        inRoomContainer.innerHTML = ''
+        loadPlayers()
+    })
+
+    settings.addEventListener('click', () => {
+        inRoomContainer.innerHTML = ''
+        loadSettings()
     })
 
     create.addEventListener('click', () => {
