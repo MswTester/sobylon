@@ -7,7 +7,6 @@ import { maps } from './map';
 import { getGraniteMat, getMaterial, getMetalMat, getSquareTileMat } from './textures';
 import { World } from './types'
 import 'babylonjs-loaders/babylon.objFileLoader'
-import { OBJFileLoader } from 'babylonjs-loaders';
 
 const server = io('/')
 
@@ -84,11 +83,18 @@ const initGame = async (thisWorld:World) => {
     shadowGenerator.getShadowMap().renderList.push(sphere);
     
     // map (ground)
-    const ground = createMap(scene, maps['default'], shadowGenerator)
+    // const ground = createMap(scene, maps['default'], shadowGenerator)
 
-    const newMeshes = (await BABYLON.SceneLoader.ImportMeshAsync('', 'obj/', 'map2.gltf', scene)).meshes as BABYLON.Mesh[]
-
-    // continue with : https://playground.babylonjs.com/#R791PH#15
+    // https://playground.babylonjs.com/#0IRV8X
+    
+    let newMeshes = (await BABYLON.SceneLoader.ImportMeshAsync('', 'obj/', 'test1.obj', scene)).meshes;
+    engine.hideLoadingUI()
+    
+    newMeshes.forEach((mesh) => {
+        shadowGenerator.getShadowMap().renderList.push(mesh);
+        mesh.receiveShadows = true;
+        mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, restitution: 0.01, friction:1, damping:100 }, scene);
+    })
 
     // jump vars
     const jumpDiv = document.querySelector('.jump > div') as HTMLDivElement
