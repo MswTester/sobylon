@@ -1,4 +1,4 @@
 /back/node_modules
-/back/dist
+# /back/dist
 /front/node_modules
 /front/.webpack_cache
