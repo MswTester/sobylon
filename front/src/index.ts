@@ -10,6 +10,10 @@ const server = io('/')
 
 window.CANNON = CANNON
 
+document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+});
+
 const isMobile = ():boolean => {
     return navigator.userAgent.includes('Android') || navigator.userAgent.includes('iPhone');
 };
@@ -28,13 +32,17 @@ const initGame = async (thisWorld:World) => {
     const speed = world.speed*0.2;
     const jumpHeight = world.jumpHeight;
     const jumpCoolTime = world.jumpCooltime;
+    const dashPower = world.dashPower
+    const dashCoolTime = world.dashCooltime
     const nicknameOffset = 1.2;
     
     let timer = 0;
 
     // elements initialization
     const jump = document.querySelector('.jump') as HTMLDivElement;
+    const dash = document.querySelector('.dash') as HTMLDivElement;
     jump.classList.remove('hide')
+    dash.classList.remove('hide')
     
     // game initialization
     const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
@@ -80,7 +88,7 @@ const initGame = async (thisWorld:World) => {
     shadowGenerator.getShadowMap().renderList.push(sphere);
     
     // map
-    let newMeshes = (await BABYLON.SceneLoader.ImportMeshAsync('', 'obj/', '8.obj', scene)).meshes;
+    let newMeshes = (await BABYLON.SceneLoader.ImportMeshAsync('', 'obj/', 'test1.obj', scene)).meshes;
     engine.hideLoadingUI()
     
     const mapOffset = [8, 3, 0]
@@ -99,12 +107,21 @@ const initGame = async (thisWorld:World) => {
     let isJumping = true;
     let jumpTimeStamp = 0;
 
+    // dash vars
+    const dashDiv = document.querySelector('.dash > div') as HTMLDivElement
+    let isDashing = true;
+    let dashTimeStamp = 0;
+
     // loop
     engine.runRenderLoop(() => {
         timer++;
-        camera.setTarget(sphere.position);
-        const dx = (camera.target.x - camera.position.x)
-        const dz = (camera.target.z - camera.position.z)
+        let dx = (camera.target.x - camera.position.x)
+        let dz = (camera.target.z - camera.position.z)
+        if(world.players[server.id].life <= 0) {
+            const spectateCam = scene.getCameraByName('spectateCam') as BABYLON.FreeCamera
+            dx = spectateCam.target.x - spectateCam.position.x
+            dz = spectateCam.target.z - spectateCam.position.z
+        }
         const angle = Math.atan2(dz, dx)
         if(isMobile()) {
             if(movingAngle) movingAngle += angle;
@@ -119,28 +136,73 @@ const initGame = async (thisWorld:World) => {
             else if(inputKeys.includes('d')) {movingAngle = angle - Math.PI/2;}
             else {movingAngle = null;}
         }
-        if(movingAngle !== null){
-            const x = Math.cos(movingAngle) * speed
-            const z = Math.sin(movingAngle) * speed
-            sphere.physicsImpostor.applyImpulse(new BABYLON.Vector3(x, 0, z), sphere.getAbsolutePosition());
+        if(world.players[server.id].life >= 1){
+            if(movingAngle !== null){
+                const x = Math.cos(movingAngle) * speed
+                const z = Math.sin(movingAngle) * speed
+                sphere.physicsImpostor.applyImpulse(new BABYLON.Vector3(x, 0, z), sphere.getAbsolutePosition());
+            }
+            camera.setTarget(sphere.position);
+            if(!isJumping && inputKeys.includes(' ')) {
+                let vel = sphere.physicsImpostor.getLinearVelocity()
+                vel.y = 0
+                sphere.physicsImpostor.setLinearVelocity(vel);
+                sphere.physicsImpostor.applyImpulse(new BABYLON.Vector3(0, jumpHeight, 0), sphere.getAbsolutePosition());
+                isJumping = true;
+                jumpTimeStamp = timer;
+            }
+            jumpDiv.style.height = `${timer - jumpTimeStamp > jumpCoolTime ? 100 : (timer - jumpTimeStamp)/jumpCoolTime*100}%`;
+            if(isJumping && timer - jumpTimeStamp > jumpCoolTime) {
+                isJumping = false;
+            }
+            if(!isDashing && inputKeys.includes('Shift')) {
+                const x = Math.cos(angle) * dashPower
+                const z = Math.sin(angle) * dashPower
+                sphere.physicsImpostor.setLinearVelocity(new BABYLON.Vector3(0,0,0));
+                sphere.physicsImpostor.applyImpulse(new BABYLON.Vector3(x, 0, z), sphere.getAbsolutePosition());
+                isDashing = true;
+                dashTimeStamp = timer;
+            }
+            dashDiv.style.height = `${timer - dashTimeStamp > dashCoolTime ? 100 : (timer - dashTimeStamp)/dashCoolTime*100}%`;
+            if(isDashing && timer - dashTimeStamp > dashCoolTime) {
+                isDashing = false;
+            }
+            server.emit('update', [sphere.position.x, sphere.position.y, sphere.position.z], [sphere.physicsImpostor.getLinearVelocity().x, sphere.physicsImpostor.getLinearVelocity().y, sphere.physicsImpostor.getLinearVelocity().z], world.players[server.id].life);
+        } else {
+            const spectateCam = scene.getCameraByName('spectateCam') as BABYLON.FreeCamera
+            if(movingAngle !== null){
+                const x = Math.cos(movingAngle) * speed
+                const z = Math.sin(movingAngle) * speed
+                spectateCam.position.x += x
+                spectateCam.position.z += z
+            }
+            if(inputKeys.includes(' ')){
+                spectateCam.position.y += speed
+            } else if(inputKeys.includes('Shift')) {
+                spectateCam.position.y -= speed
+            }
         }
         if(isMobile() && movingAngle !== null) {movingAngle -= angle;}
-        if(sphere.position.y < -10) {
-            sphere.position.x = 0;
-            sphere.position.y = 5;
-            sphere.position.z = 0;
-            sphere.physicsImpostor.setLinearVelocity(new BABYLON.Vector3(0,0,0));
+        if(sphere.position.y < -10 && world.players[server.id].life >= 1) {
+            world.players[server.id].life -= 1;
+            if(world.players[server.id].life <= 0) {
+                server.emit('gameOver', world.ownerId)
+                // death && spectate cam
+                sphere.dispose();
+                jumpDiv.style.height = '0%';
+                dashDiv.style.height = '0%';
+                const spectateCam = new BABYLON.FreeCamera('spectateCam', new BABYLON.Vector3(0, 10, 0), scene);
+                spectateCam.attachControl(canvas, true);
+                spectateCam.inertia = isMobile() ? 0.8 : 0.5;
+                spectateCam.setTarget(new BABYLON.Vector3(0, 0, 0));
+                camera.dispose();
+            } else {
+                sphere.position.x = 0;
+                sphere.position.y = 5;
+                sphere.position.z = 0;
+                sphere.physicsImpostor.setLinearVelocity(new BABYLON.Vector3(0,0,0));
+            }
         }
-        if(!isJumping && inputKeys.includes(' ')) {
-            sphere.physicsImpostor.applyImpulse(new BABYLON.Vector3(0, jumpHeight, 0), sphere.getAbsolutePosition());
-            isJumping = true;
-            jumpTimeStamp = timer;
-        }
-        jumpDiv.style.height = `${timer - jumpTimeStamp > jumpCoolTime ? 100 : (timer - jumpTimeStamp)/jumpCoolTime*100}%`;
-        if(isJumping && timer - jumpTimeStamp > jumpCoolTime) {
-            isJumping = false;
-        }
-        server.emit('update', [sphere.position.x, sphere.position.y, sphere.position.z], [sphere.physicsImpostor.getLinearVelocity().x, sphere.physicsImpostor.getLinearVelocity().y, sphere.physicsImpostor.getLinearVelocity().z]);
         scene.render();
     });
 
@@ -192,6 +254,15 @@ const initGame = async (thisWorld:World) => {
     })
     jump.addEventListener('touchend', event => {
         inputKeys = inputKeys.filter((key) => key !== ' ');
+        event.preventDefault()
+    })
+
+    dash.addEventListener('touchstart', event => {
+        inputKeys.push('Shift')
+        event.preventDefault()
+    })
+    dash.addEventListener('touchend', event => {
+        inputKeys = inputKeys.filter((key) => key !== 'Shift');
         event.preventDefault()
     })
     
@@ -267,7 +338,6 @@ const initGame = async (thisWorld:World) => {
         });
         started = true;
     });
-    console.log(world)
     server.on('update', (id:string, pos:number[], velocity:number[]) => {
         if(started && world.players[id]){
             world.players[id].position = pos;
@@ -288,15 +358,25 @@ const initGame = async (thisWorld:World) => {
             }
         }
     });
-    server.on('disconnected', (id:string) => {
+    const removePlayer = (id:string) => {
         const sph = scene.getMeshByName(id);
         const plane = scene.getMeshByName(`${id}-plane`);
         if (sph && plane) {
             sph.dispose();
             plane.dispose();
         }
+    }
+    server.on('gameOver', (id:string) => {
+        removePlayer(id);
+    });
+    server.on('disconnected', (id:string) => {
+        removePlayer(id);
         delete world.players[id];
     });
+    server.on('ownerChanged', (worldId:string, newOwnerId:string) => {
+        if(world.ownerId !== worldId) return;
+        world.ownerId = newOwnerId
+    })
 }
 
 const main = document.querySelector('.main') as HTMLDivElement
@@ -339,8 +419,18 @@ const enterRoom = () => {
 server.on('connect', () => {
     console.log('connected');
     server.emit('debug', navigator.userAgent)
-    
+
     // events
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+        }
+        if(e.code === 'KeyL' && e.ctrlKey) {
+            e.preventDefault();
+            server.emit('log')
+        }
+    });
+
     nickname.addEventListener('keydown', (e) => {
         if(e.key === 'Enter') {
             enterGame()
@@ -371,72 +461,113 @@ server.on('connect', () => {
         })
     }
 
+    const saveRoom = () => {
+        myWorld.gravity = Number((document.querySelector('input[name="gravity"]') as HTMLInputElement).value)
+        myWorld.speed = Number((document.querySelector('input[name="speed"]') as HTMLInputElement).value)
+        myWorld.jumpHeight = Number((document.querySelector('input[name="jumpHeight"]') as HTMLInputElement).value)
+        myWorld.jumpCooltime = Number((document.querySelector('input[name="jumpCooltime"]') as HTMLInputElement).value)
+        myWorld.dashPower = Number((document.querySelector('input[name="dashPower"]') as HTMLInputElement).value)
+        myWorld.dashCooltime = Number((document.querySelector('input[name="dashCooltime"]') as HTMLInputElement).value)
+        myWorld.damping = Number((document.querySelector('input[name="damping"]') as HTMLInputElement).value)
+        myWorld.restitution = Number((document.querySelector('input[name="restitution"]') as HTMLInputElement).value)
+        myWorld.maxlife = Number((document.querySelector('input[name="maxlife"]') as HTMLInputElement).value)
+        server.emit('updateRoom', myWorld)
+    }
+
     const loadSettings = () => {
         const set = document.createElement('div')
         set.classList.add('settings')
         set.innerHTML = `
             <div class="gravity">
                 <label for="gravity">Gravity</label>
-                <input type="number" name="gravity" value="${myWorld.gravity}" step="0.1">
+                <input class="room-set" type="number" name="gravity" value="${myWorld.gravity}" step="0.1">
             </div>
             <div class="speed">
                 <label for="speed">Speed</label>
-                <input type="number" name="speed" value="${myWorld.speed}" step="0.1">
+                <input class="room-set" type="number" name="speed" value="${myWorld.speed}" step="0.1">
             </div>
             <div class="jumpHeight">
                 <label for="jumpHeight">Jump Height</label>
-                <input type="number" name="jumpHeight" value="${myWorld.jumpHeight}" step="0.1">
+                <input class="room-set" type="number" name="jumpHeight" value="${myWorld.jumpHeight}" step="0.1">
             </div>
             <div class="jumpCooltime">
                 <label for="jumpCooltime">Jump Cooltime</label>
-                <input type="number" name="jumpCooltime" value="${myWorld.jumpCooltime}" step="0.1">
+                <input class="room-set" type="number" name="jumpCooltime" value="${myWorld.jumpCooltime}" step="0.1">
+            </div>
+            <div class="dashPower">
+                <label for="dashPower">Dash Power</label>
+                <input class="room-set" type="number" name="dashPower" value="${myWorld.dashPower}" step="0.1">
+            </div>
+            <div class="dashCooltime">
+                <label for="dashCooltime">Dash Cooltime</label>
+                <input class="room-set" type="number" name="dashCooltime" value="${myWorld.dashCooltime}" step="0.1">
             </div>
             <div class="damping">
                 <label for="damping">Damping</label>
-                <input type="number" name="damping" value="${myWorld.damping}" step="0.1">
+                <input class="room-set" type="number" name="damping" value="${myWorld.damping}" step="0.1">
             </div>
             <div class="restitution">
                 <label for="restitution">Restitution</label>
-                <input type="number" name="restitution" value="${myWorld.restitution}" step="0.1">
+                <input class="room-set" type="number" name="restitution" value="${myWorld.restitution}" step="0.1">
             </div>
+            <div class="maxlife">
+                <label for="maxlife">Max Life</label>
+                <input class="room-set" type="number" name="maxlife" value="${myWorld.maxlife}" step="0.1">
+            </div>
+            <button class="save">Save</button>
         `
+        const save = set.querySelector('button.save') as HTMLButtonElement
+        save.addEventListener('click', saveRoom)
         inRoomContainer.append(set)
     }
 
+    server.on('ownerChanged', (worldId:string, newOwnerId:string) => {
+        if(myWorld){
+            if(myWorld.ownerId !== worldId) return;
+            myWorld.ownerId = newOwnerId
+        }
+    })
+
     server.on('getRooms', (worlds:World[]) => {
-        if(inRoom.classList.contains('hide')){
-            container.innerHTML = ''
-            console.log(worlds)
-            worlds.forEach((world:World) => {
-                if(world.status !== 'waiting') return;
-                const room = document.createElement('div')
-                room.classList.add('room')
-                room.innerHTML = `
-                    <div class="name">${world.name}</div>
-                    <div class="map">${world.map}</div>
-                    <div class="players">${Object.keys(world.players).length}/${world.maxPlayers}</div>
-                `
-                const join = document.createElement('button')
-                join.classList.add('join')
-                join.innerText = 'Join'
-                join.addEventListener('click', () => {
-                    if(Object.keys(world.players).length >= world.maxPlayers) return;
-                    server.emit('joinRoom', world.ownerId, nickname.value, texture.value)
-                })
-                room.appendChild(join)
-                container.appendChild(room)
-            })
-        } else {
+        if(!inRoom.classList.contains('hide')) {
             myWorld = worlds.find(world => world.ownerId === myWorld.ownerId)
             if(myWorld){
                 inRoomContainer.innerHTML = ''
                 loadPlayers()
+                if(myWorld.ownerId == server.id){
+                    startGame.classList.remove('hide')
+                    startGame.addEventListener('click', () => {
+                        server.emit('startGame', myWorld.ownerId)
+                        inRoom.classList.add('hide')
+                    })
+                    settings.classList.remove('hide')
+                }
             } else {
                 inRoom.classList.add('hide')
                 rooms.classList.remove('hide')
                 myWorld = null
             }
         }
+        container.innerHTML = ''
+        worlds.forEach((world:World) => {
+            if(world.status !== 'waiting') return;
+            const room = document.createElement('div')
+            room.classList.add('room')
+            room.innerHTML = `
+                <div class="name">${world.name}</div>
+                <div class="map">${world.map}</div>
+                <div class="players">${Object.keys(world.players).length}/${world.maxPlayers}</div>
+            `
+            const join = document.createElement('button')
+            join.classList.add('join')
+            join.innerText = 'Join'
+            join.addEventListener('click', () => {
+                if(Object.keys(world.players).length >= world.maxPlayers) return;
+                server.emit('joinRoom', world.ownerId, nickname.value, texture.value)
+            })
+            room.appendChild(join)
+            container.appendChild(room)
+        })
     })
 
     players.addEventListener('click', () => {
@@ -458,7 +589,6 @@ server.on('connect', () => {
     })
 
     server.on('joinedRoom', (world:World) => {
-        console.log(world)
         myWorld = world
         enterRoom()
         if(server.id == world.ownerId){
@@ -472,8 +602,16 @@ server.on('connect', () => {
     })
 
     server.on('gameStarted', (world:World) => {
-        inRoom.classList.add('hide')
-        myWorld = world
-        initGame(myWorld)
+        if(myWorld){
+            if(myWorld.ownerId === world.ownerId) {
+                inRoom.classList.add('hide')
+                myWorld = world
+                initGame(myWorld)
+            }
+        }
+    })
+
+    server.on('log', (logger:string[]) => {
+        console.log(logger.join('\n'))
     })
 })

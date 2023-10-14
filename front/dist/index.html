@@ -53,9 +53,8 @@
         border-radius: 50px;
         background-color: rgba(255, 255, 255, 0.3);
     }
-    .jump{
+    .jump, .dash{
         position: fixed;
-        right: 10px;
         bottom: 10px;
         width: 100px;
         height: 100px;
@@ -71,7 +70,13 @@
         font-size: 20px;
         font-weight: bold;
     }
-    .jump > div{
+    .jump{
+        right: 10px;
+    }
+    .dash{
+        right: 120px;
+    }
+    .jump > div, .dash > div{
         position: absolute;
         left: 0;
         bottom: 0;
@@ -284,14 +289,14 @@
         display: flex;
         flex-direction: row;
         justify-content: space-between;
-        padding: 10px;
+        padding: 5px 10px;
     }
     .inRoom > .container > div.settings > div > input{
         width: max(200px, 50%);
         height: 40px;
         border-radius: 10px;
         border: 0;
-        font-size: 20px;
+        font-size: 16px;
         font-weight: bold;
         color: white;
         text-align: center;
@@ -310,6 +315,17 @@
         color: white;
         text-align: center;
         background-color: rgba(0, 0, 0, 0.5);
+        display: block;
+    }
+    .inRoom > .container > div.settings > button{
+        width: 100%;
+        height: 40px;
+        border: 0;
+        font-size: 20px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        background-color: rgba(0, 0, 0, 0.3);
         display: block;
     }
     </style>
@@ -360,5 +376,6 @@
         </div>
     </div>
     <div class="jump hide"><div></div>JUMP</div>
+    <div class="dash hide"><div></div>DASH</div>
 </body>
 </html>

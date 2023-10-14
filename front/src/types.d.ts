@@ -12,8 +12,11 @@ export interface World{
     speed:number;
     jumpHeight:number;
     jumpCooltime:number;
+    dashPower:number;
+    dashCooltime:number;
     damping:number;
     restitution:number;
+    maxlife:number;
     name:string;
     map:string;
     maxPlayers:number;
