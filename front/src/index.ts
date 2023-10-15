@@ -119,6 +119,7 @@ const initGame = async (thisWorld:World) => {
         let dz = (camera.target.z - camera.position.z)
         if(world.players[server.id].life <= 0) {
             const spectateCam = scene.getCameraByName('spectateCam') as BABYLON.FreeCamera
+            if(!spectateCam) return;
             dx = spectateCam.target.x - spectateCam.position.x
             dz = spectateCam.target.z - spectateCam.position.z
         }
@@ -536,10 +537,6 @@ server.on('connect', () => {
                 loadPlayers()
                 if(myWorld.ownerId == server.id){
                     startGame.classList.remove('hide')
-                    startGame.addEventListener('click', () => {
-                        server.emit('startGame', myWorld.ownerId)
-                        inRoom.classList.add('hide')
-                    })
                     settings.classList.remove('hide')
                 }
             } else {
@@ -593,12 +590,13 @@ server.on('connect', () => {
         enterRoom()
         if(server.id == world.ownerId){
             startGame.classList.remove('hide')
-            startGame.addEventListener('click', () => {
-                server.emit('startGame', world.ownerId)
-                inRoom.classList.add('hide')
-            })
             settings.classList.remove('hide')
         }
+    })
+    startGame.addEventListener('click', () => {
+        if(!myWorld) return;
+        server.emit('startGame', myWorld.ownerId)
+        inRoom.classList.add('hide')
     })
 
     server.on('gameStarted', (world:World) => {
