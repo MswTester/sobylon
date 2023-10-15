@@ -33,9 +33,9 @@ const getTime = () => {
     }
 }
 const log = (eventType:string, socket:Socket, ...args:any[]) => {
-    let str = `[${getTime()}] ${eventType} ${socket.handshake.address}:${socket.id} ${args.join(' ')}`
+    let str = `\u001b[32m[${getTime()}]\u001b[0m \u001b[33m${eventType}\u001b[0m \u001b[35m${socket.handshake.address}\u001b[0m:\u001b[34m${socket.id}\u001b[0m ${args.join(' ')}`;
     logger.push(str)
-    console.log(str)
+    console.log(str);
 }
 io.on('connection', socket => {
     log('CONNECT', socket)
@@ -61,6 +61,7 @@ io.on('connection', socket => {
             ownerId: socket.id,
             players: {},
             status: 'waiting',
+            chat: [],
         }
         worlds.push(world)
         socket.emit('createdRoom', world)
@@ -140,10 +141,27 @@ io.on('connection', socket => {
         })
         socket.broadcast.emit('update', socket.id, pos, velocity)
     })
+    const endGame = (world:World) => {
+        const playerKeys = Object.values(world.players)
+        const leftPlayers = playerKeys.filter(player => player.life > 0)
+        if(leftPlayers.length === 1){
+            const winnerId = Object.keys(world.players).find(key => world.players[key].life > 0)
+            if(winnerId){
+                socket.emit('gameEnd', winnerId)
+                socket.broadcast.emit('gameEnd', winnerId)
+                world.status = 'waiting'
+                socket.emit('getRooms', worlds)
+                socket.broadcast.emit('getRooms', worlds)
+            }
+        }
+    }
     socket.on('gameOver', (worldId:string) => {
+        log('GAME_OVER', socket)
         let world = worlds.find(world => world.ownerId === worldId)
         if(world){
+            world.players[socket.id].life = 0
             socket.broadcast.emit('gameOver', socket.id)
+            endGame(world)
         }
     })
     socket.on('disconnect', () => {
@@ -162,6 +180,10 @@ io.on('connection', socket => {
                 worlds = worlds.filter(world => world.ownerId !== socket.id)
             }
         }
+        // End Game
+        worlds.forEach(world => {
+            endGame(world)
+        })
         socket.broadcast.emit('disconnected', socket.id)
         socket.broadcast.emit('getRooms', worlds)
     })

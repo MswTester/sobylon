@@ -21,6 +21,7 @@ export interface World{
     map:string;
     maxPlayers:number;
     ownerId:string;
-    players:{[key:string]:Player};
     status:string;
+    players:{[key:string]:Player};
+    chat:string[];
 }
