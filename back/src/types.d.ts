@@ -23,4 +23,5 @@ export interface World{
     ownerId:string;
     status:string;
     players:{[key:string]:Player};
+    chat:string[];
 }

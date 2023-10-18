@@ -208,28 +208,36 @@ const initGame = async (thisWorld:World) => {
     });
 
     // input event
-    document.addEventListener('keydown', (e) => {
+    const keydown = (e:KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            document.exitPointerLock();
+        }
         if (!inputKeys.includes(e.key)) {
             inputKeys.push(e.key);
         }
-    });
-    document.addEventListener('keyup', (e) => {
+    }
+    const keyup = (e:KeyboardEvent) => {
         inputKeys = inputKeys.filter((key) => key !== e.key);
-    });
+    }
+    document.addEventListener('keydown', keydown);
+    document.addEventListener('keyup', keyup);
     
     // resize event
-    window.addEventListener('resize', () => {
+    const resize = () => {
         engine.resize()
         camRadious = isMobile() ? innerWidth > innerHeight ? 13 : 20 : 10;
         camera.upperRadiusLimit = camRadious;
         camera.lowerRadiusLimit = camRadious;
-    });
+    }
+    window.addEventListener('resize', resize);
     
     // pointer lock
-    document.addEventListener('click', () => {
+    const pointerlockchange = () => {
         canvas.requestPointerLock();
         canvas.focus();
-    });
+    }
+    document.addEventListener('click', pointerlockchange);
     
     // mobile control
     const mobileLayout = document.querySelector('.mobile-layout') as HTMLDivElement;
@@ -249,25 +257,29 @@ const initGame = async (thisWorld:World) => {
         return [x, y]
     }
     
-    jump.addEventListener('touchstart', event => {
+    const jump_touchstart = (event:TouchEvent) => {
         inputKeys.push(' ')
         event.preventDefault()
-    })
-    jump.addEventListener('touchend', event => {
+    }
+    jump.addEventListener('touchstart', jump_touchstart)
+    const jump_touchend = (event:TouchEvent) => {
         inputKeys = inputKeys.filter((key) => key !== ' ');
         event.preventDefault()
-    })
+    }
+    jump.addEventListener('touchend', jump_touchend)
 
-    dash.addEventListener('touchstart', event => {
+    const dash_touchstart = (event:TouchEvent) => {
         inputKeys.push('Shift')
         event.preventDefault()
-    })
-    dash.addEventListener('touchend', event => {
+    }
+    dash.addEventListener('touchstart', dash_touchstart)
+    const dash_touchend = (event:TouchEvent) => {
         inputKeys = inputKeys.filter((key) => key !== 'Shift');
         event.preventDefault()
-    })
+    }
+    dash.addEventListener('touchend', dash_touchend)
     
-    mobileLayout.addEventListener('touchstart', event => {
+    const joystick_touchstart = (event:TouchEvent) => {
         const [x, y] = getTouchesXY(event)
         joystick.classList.remove('hide')
         joystick.style.left = `${x}px`
@@ -278,8 +290,9 @@ const initGame = async (thisWorld:World) => {
         joystick.style.transition = 'none'
         joystick.style.transform = 'translate(-50%, -50%)'
         movingAngle = null;
-    });
-    mobileLayout.addEventListener('touchmove', event => {
+    }
+    mobileLayout.addEventListener('touchstart', joystick_touchstart);
+    const joystick_touchmove = (event:TouchEvent) => {
         let [dx, dy] = getTouchesXY(event)
         dx -= startPoint[0]
         dy -= startPoint[1]
@@ -291,12 +304,14 @@ const initGame = async (thisWorld:World) => {
         joystickButton.style.left = `${x+50}px`
         joystickButton.style.top = `${y+50}px`
         movingAngle = (-angle) - Math.PI/2;
-    });
-    mobileLayout.addEventListener('touchend', event => {
+    }
+    mobileLayout.addEventListener('touchmove', joystick_touchmove);
+    const joystick_touchend = (event:TouchEvent) => {
         joystick.classList.add('hide')
         joystick.style.transition = 'opacity 0.5s'
         movingAngle = null;
-    });
+    }
+    mobileLayout.addEventListener('touchend', joystick_touchend);
     
     // enemy creation
     const createEnemy = (id:string, pos:number[], velocity:number[]) => {
@@ -374,9 +389,39 @@ const initGame = async (thisWorld:World) => {
         removePlayer(id);
         delete world.players[id];
     });
-    server.on('ownerChanged', (worldId:string, newOwnerId:string) => {
-        if(world.ownerId !== worldId) return;
-        world.ownerId = newOwnerId
+    server.on('gameEnd', (winnerId:string) => {
+        const winner = world.players[winnerId]
+        const winnerDiv = document.createElement('div')
+        winnerDiv.classList.add('winner')
+        winnerDiv.innerText = `${winner.nickname} Win!`
+        document.body.appendChild(winnerDiv)
+        engine.stopRenderLoop()
+        document.exitPointerLock()
+        server.off('update')
+        server.off('gameOver')
+        server.off('disconnected')
+        server.off('gameEnd')
+        server.off('init')
+        document.removeEventListener('keydown', keydown);
+        document.removeEventListener('keyup', keyup);
+        window.removeEventListener('resize', resize);
+        document.removeEventListener('click', pointerlockchange);
+        mobileLayout.removeEventListener('touchstart', joystick_touchstart);
+        mobileLayout.removeEventListener('touchmove', joystick_touchmove);
+        mobileLayout.removeEventListener('touchend', joystick_touchend);
+        jump.removeEventListener('touchstart', jump_touchstart)
+        jump.removeEventListener('touchend', jump_touchend)
+        dash.removeEventListener('touchstart', dash_touchstart)
+        dash.removeEventListener('touchend', dash_touchend)
+        setTimeout(() => {
+            winnerDiv.remove()
+            canvas.classList.add('hide')
+            jump.classList.add('hide')
+            dash.classList.add('hide')
+            inRoom.classList.remove('hide')
+            engine.dispose()
+            server.emit('getRooms')
+        }, 3000)
     })
 }
 
@@ -426,7 +471,7 @@ server.on('connect', () => {
         if (e.key === 'Tab') {
             e.preventDefault();
         }
-        if(e.code === 'KeyL' && e.ctrlKey) {
+        if(e.code === 'KeyL' && e.ctrlKey && process.env.NODE_ENV == 'development') {
             e.preventDefault();
             server.emit('log')
         }
@@ -559,10 +604,9 @@ server.on('connect', () => {
             join.classList.add('join')
             join.innerText = 'Join'
             join.addEventListener('click', () => {
-                if(Object.keys(world.players).length >= world.maxPlayers) return;
                 server.emit('joinRoom', world.ownerId, nickname.value, texture.value)
             })
-            room.appendChild(join)
+            if(Object.keys(world.players).length < world.maxPlayers) room.appendChild(join);
             container.appendChild(room)
         })
     })
