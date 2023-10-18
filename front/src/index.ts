@@ -88,7 +88,7 @@ const initGame = async (thisWorld:World) => {
     shadowGenerator.getShadowMap().renderList.push(sphere);
     
     // map
-    let newMeshes = (await BABYLON.SceneLoader.ImportMeshAsync('', 'obj/', 'test1.obj', scene)).meshes;
+    let newMeshes = (await BABYLON.SceneLoader.ImportMeshAsync('', 'obj/', `${world.map}.obj`, scene)).meshes;
     engine.hideLoadingUI()
     
     const mapOffset = [8, 3, 0]
