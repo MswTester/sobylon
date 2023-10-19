@@ -11,9 +11,12 @@ app.get('/', (req, res) => {
     res.redirect('/public/index.html');
 });
 const spawnpoints = {
-    'bridge': [10, 10, -10, 3],
-    'stairs': [10, 10, 0, 3],
+    'bridge': [40, 10, 0, 3],
     'spintower': [0, 10, 8, 3],
+    'thefield': [0, 10, 0, 3],
+    'blackhole': [10, 10, 10, 3],
+    'space': [0, 30, 0, 20],
+    'untitled': [0, 10, 0, 3],
 };
 const server = app.listen(3000);
 const io = new socket_io_1.Server(server);

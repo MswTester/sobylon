@@ -94,6 +94,7 @@ const initGame = async (thisWorld:World) => {
     const mapOffset = [0, 0, 0]
 
     newMeshes.forEach((mesh) => {
+        mesh.setVerticesData(BABYLON.VertexBuffer.UVKind, [])
         shadowGenerator.getShadowMap().renderList.push(mesh);
         mesh.receiveShadows = true;
         mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, restitution: globalRestitution/5, friction:1, damping:globalDamping }, scene);
