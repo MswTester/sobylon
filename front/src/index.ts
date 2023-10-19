@@ -91,7 +91,7 @@ const initGame = async (thisWorld:World) => {
     let newMeshes = (await BABYLON.SceneLoader.ImportMeshAsync('', 'obj/', `${world.map}.obj`, scene)).meshes;
     engine.hideLoadingUI()
     
-    const mapOffset = [8, 3, 0]
+    const mapOffset = [8, 0, 0]
 
     newMeshes.forEach((mesh) => {
         shadowGenerator.getShadowMap().renderList.push(mesh);
@@ -127,14 +127,14 @@ const initGame = async (thisWorld:World) => {
         if(isMobile()) {
             if(movingAngle) movingAngle += angle;
         } else {
-            if(inputKeys.includes('w') && inputKeys.includes('a')) {movingAngle = angle + Math.PI/4;}
-            else if (inputKeys.includes('w') && inputKeys.includes('d')) {movingAngle = angle - Math.PI/4;}
-            else if(inputKeys.includes('s') && inputKeys.includes('a')) {movingAngle = angle + Math.PI/4 * 3;}
-            else if(inputKeys.includes('s') && inputKeys.includes('d')) {movingAngle = angle - Math.PI/4 * 3;}
-            else if (inputKeys.includes('w')) {movingAngle = angle;}
-            else if(inputKeys.includes('s')) {movingAngle = angle + Math.PI;}
-            else if(inputKeys.includes('a')) {movingAngle = angle + Math.PI/2;}
-            else if(inputKeys.includes('d')) {movingAngle = angle - Math.PI/2;}
+            if(inputKeys.includes('KeyW') && inputKeys.includes('KeyA')) {movingAngle = angle + Math.PI/4;}
+            else if (inputKeys.includes('KeyW') && inputKeys.includes('KeyD')) {movingAngle = angle - Math.PI/4;}
+            else if(inputKeys.includes('KeyS') && inputKeys.includes('KeyA')) {movingAngle = angle + Math.PI/4 * 3;}
+            else if(inputKeys.includes('KeyS') && inputKeys.includes('KeyD')) {movingAngle = angle - Math.PI/4 * 3;}
+            else if (inputKeys.includes('KeyW')) {movingAngle = angle;}
+            else if(inputKeys.includes('KeyS')) {movingAngle = angle + Math.PI;}
+            else if(inputKeys.includes('KeyA')) {movingAngle = angle + Math.PI/2;}
+            else if(inputKeys.includes('KeyD')) {movingAngle = angle - Math.PI/2;}
             else {movingAngle = null;}
         }
         if(world.players[server.id].life >= 1){
@@ -144,7 +144,7 @@ const initGame = async (thisWorld:World) => {
                 sphere.physicsImpostor.applyImpulse(new BABYLON.Vector3(x, 0, z), sphere.getAbsolutePosition());
             }
             camera.setTarget(sphere.position);
-            if(!isJumping && inputKeys.includes(' ')) {
+            if(!isJumping && inputKeys.includes('Space')) {
                 let vel = sphere.physicsImpostor.getLinearVelocity()
                 vel.y = 0
                 sphere.physicsImpostor.setLinearVelocity(vel);
@@ -156,7 +156,7 @@ const initGame = async (thisWorld:World) => {
             if(isJumping && timer - jumpTimeStamp > jumpCoolTime) {
                 isJumping = false;
             }
-            if(!isDashing && inputKeys.includes('Shift')) {
+            if(!isDashing && inputKeys.includes('ShiftLeft')) {
                 const x = Math.cos(angle) * dashPower
                 const z = Math.sin(angle) * dashPower
                 sphere.physicsImpostor.setLinearVelocity(new BABYLON.Vector3(0,0,0));
@@ -177,9 +177,9 @@ const initGame = async (thisWorld:World) => {
                 spectateCam.position.x += x
                 spectateCam.position.z += z
             }
-            if(inputKeys.includes(' ')){
+            if(inputKeys.includes('Space')){
                 spectateCam.position.y += speed
-            } else if(inputKeys.includes('Shift')) {
+            } else if(inputKeys.includes('ShiftLeft')) {
                 spectateCam.position.y -= speed
             }
         }
@@ -209,16 +209,16 @@ const initGame = async (thisWorld:World) => {
 
     // input event
     const keydown = (e:KeyboardEvent) => {
-        if (e.key === 'Escape') {
+        if (e.code === 'Escape') {
             e.preventDefault();
             document.exitPointerLock();
         }
-        if (!inputKeys.includes(e.key)) {
-            inputKeys.push(e.key);
+        if (!inputKeys.includes(e.code)) {
+            inputKeys.push(e.code);
         }
     }
     const keyup = (e:KeyboardEvent) => {
-        inputKeys = inputKeys.filter((key) => key !== e.key);
+        inputKeys = inputKeys.filter((key) => key !== e.code);
     }
     document.addEventListener('keydown', keydown);
     document.addEventListener('keyup', keyup);
@@ -258,23 +258,23 @@ const initGame = async (thisWorld:World) => {
     }
     
     const jump_touchstart = (event:TouchEvent) => {
-        inputKeys.push(' ')
+        inputKeys.push('Space')
         event.preventDefault()
     }
     jump.addEventListener('touchstart', jump_touchstart)
     const jump_touchend = (event:TouchEvent) => {
-        inputKeys = inputKeys.filter((key) => key !== ' ');
+        inputKeys = inputKeys.filter((key) => key !== 'Space');
         event.preventDefault()
     }
     jump.addEventListener('touchend', jump_touchend)
 
     const dash_touchstart = (event:TouchEvent) => {
-        inputKeys.push('Shift')
+        inputKeys.push('ShiftLeft')
         event.preventDefault()
     }
     dash.addEventListener('touchstart', dash_touchstart)
     const dash_touchend = (event:TouchEvent) => {
-        inputKeys = inputKeys.filter((key) => key !== 'Shift');
+        inputKeys = inputKeys.filter((key) => key !== 'ShiftLeft');
         event.preventDefault()
     }
     dash.addEventListener('touchend', dash_touchend)

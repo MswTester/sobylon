@@ -11,7 +11,9 @@ app.get('/', (req, res) => {
     res.redirect('/public/index.html');
 });
 const spawnpoints = {
-    default: [3, 10, 3]
+    'bridge': [10, 10, -10, 3],
+    'stairs': [10, 10, 0, 3],
+    'spin': [0, 10, 0, 3],
 };
 const server = app.listen(3000);
 const io = new socket_io_1.Server(server);
@@ -46,9 +48,9 @@ io.on('connection', socket => {
             gravity: 1,
             speed: 1,
             jumpHeight: 8,
-            jumpCooltime: 400,
+            jumpCooltime: 300,
             dashPower: 15,
-            dashCooltime: 300,
+            dashCooltime: 400,
             damping: 0.5,
             restitution: 1.5,
             maxlife: 1,
@@ -109,9 +111,9 @@ io.on('connection', socket => {
             world.status = 'playing';
             Object.keys(world.players).forEach((key, index) => {
                 let spawnPos = [0, 0, 0];
-                spawnPos[0] = Math.random() * spawnpoints[world.map][0] * 2 - spawnpoints[world.map][0];
+                spawnPos[0] = spawnpoints[world.map][0] + Math.random() * spawnpoints[world.map][3] * 2 - spawnpoints[world.map][3];
                 spawnPos[1] = spawnpoints[world.map][1];
-                spawnPos[2] = Math.random() * spawnpoints[world.map][2] * 2 - spawnpoints[world.map][2];
+                spawnPos[2] = spawnpoints[world.map][2] + Math.random() * spawnpoints[world.map][3] * 2 - spawnpoints[world.map][3];
                 world.players[key].position = spawnPos;
                 world.players[key].velocity = [0, 0, 0];
                 world.players[key].life = world.maxlife;
