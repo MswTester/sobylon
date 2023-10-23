@@ -16,6 +16,7 @@ const spawnpoints = {
     'thefield': [0, 10, 0, 3],
     'blackhole': [10, 10, 10, 3],
     'space': [0, 30, 0, 20],
+    'donut': [0, 10, 0, 2],
     'untitled': [0, 10, 0, 3],
 };
 const server = app.listen(3000);
