@@ -105,44 +105,50 @@
         margin: auto;
         height: 70%;
         width: 100%;
+        display: flex;
+        flex-direction: column;
     }
     .main > div > select.texture{
         width: max(50%, 200px);
         margin: auto;
         height: 50px;
-        border-radius: 10px;
-        background-color: rgba(0, 0, 0, 0.2);
+        color: black;
         border: 0;
+        border-bottom: 1px solid gray;
         font-size: 20px;
         text-align: center;
-        color: white;
         font-weight: bold;
         display: block;
+    }
+    .main > div > select.texture > option{
+        color: black;
+    }
+    input.nickname:focus, select.texture:focus{
+        outline: none;
     }
     input.nickname{
         width: max(50%, 200px);
         margin: auto;
         height: 50px;
-        border-radius: 10px;
-        background-color: rgba(0, 0, 0, 0.3);
         border: 0;
+        border-bottom: 1px solid gray;
         font-size: 20px;
         text-align: center;
-        color: white;
+        color: black;
         font-weight: bold;
         display: block;
     }
     button.start{
-        width: max(50%, 200px);
+        width: max(20%, 200px);
         margin: auto;
         height: 50px;
-        border-radius: 10px;
+        border-radius: 100px;
         border: 0;
         font-size: 20px;
         text-align: center;
         color: white;
         font-weight: bold;
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: #404040;
         display: block;
     }
     .rooms{
@@ -168,17 +174,25 @@
         text-align: center;
         user-select: none;
     }
+    div.popup > input:focus, div.popup > select:focus{
+        outline: none;
+    }
     div.popup > input, div.popup > button, div.popup > select{
         font-size: large;
-        border-radius: 10px;
         border: 0;
-        background-color: rgba(255, 255, 255, 0.2);
+        border-bottom: 1px solid white;
+        background-color: transparent;
         outline: none;
         padding: 10px;
         width: 90%;
         margin: auto;
         font-weight: bold;
         color: white;
+    }
+    div.popup > button{
+        border: 0;
+        border-radius: 100px;
+        background-color: #404040;
     }
     div.popup > select > option{
         background-color: black;
@@ -187,13 +201,13 @@
         width: max(50%, 200px);
         margin: 10px auto;
         height: 50px;
-        border-radius: 10px;
+        border-radius: 100px;
         border: 0;
         font-size: 20px;
         font-weight: bold;
         color: white;
         text-align: center;
-        background-color: rgba(0, 0, 0, 0.3);
+        background-color: #404040;
         display: block;
     }
     div.back{
@@ -234,7 +248,7 @@
         font-weight: bold;
         color: white;
         text-align: center;
-        background-color: rgba(0, 0, 0, 0.3);
+        background-color: #404040;
         display: block;
     }
     div.inRoom{
@@ -250,7 +264,7 @@
         display: flex;
         flex-direction: row;
         justify-content: space-between;
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: #404040;
         flex: 1;
     }
     .inRoom > .menu > div {
