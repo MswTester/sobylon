@@ -157,6 +157,7 @@
         justify-content: space-around;
         text-align: center;
         user-select: none;
+        overflow-y: auto;
     }
     div.popup{
         position: absolute;
@@ -279,15 +280,30 @@
     }
     .inRoom > .container{
         flex: 8;
+        background-color: #dedede;
+        overflow-y: auto;
+    }
+    .inRoom > .container::-webkit-scrollbar {
+        width: 10px;
+    }
+    .inRoom > .container::-webkit-scrollbar-track {
+        background-color: transparent;
+    }
+    .inRoom > .container::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+    }
+    .inRoom > .container::-webkit-scrollbar-thumb:hover {
         background-color: rgba(0, 0, 0, 0.3);
-        overflow-y: scroll;
-        overflow: hidden;
+    }
+    .inRoom > .container::-webkit-scrollbar-thumb:active {
+        background-color: rgba(0, 0, 0, 0.4);
     }
     .inRoom > .container > div.player{
         padding: 10px;
         font-weight: bold;
         font-size: large;
-        color: white;
+        color: black;
         margin: 10px;
         background-color: rgba(0, 0, 0, 0.2);
         border-radius: 10px;
@@ -296,7 +312,7 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        color: white;
+        color: black;
         font-weight: bold;
         font-size: large;
         text-align: center;
@@ -308,16 +324,24 @@
         justify-content: space-between;
         padding: 5px 10px;
     }
+    .inRoom > .container > div.settings > div.blank{
+        width: 100%;
+        padding-top: 5rem;
+    }
+    .inRoom > .container > div.settings > div > input:focus{
+        outline: none;
+    }
     .inRoom > .container > div.settings > div > input{
         width: max(200px, 50%);
+        background-color: transparent;
         height: 40px;
-        border-radius: 10px;
         border: 0;
         font-size: 16px;
         font-weight: bold;
-        color: white;
+        color: black;
         text-align: center;
-        background-color: rgba(0, 0, 0, 0.3);
+        border: 0;
+        border-bottom: 1px solid black;
         display: block;
     }
     .inRoom > button.init-game{
@@ -332,17 +356,6 @@
         color: white;
         text-align: center;
         background-color: rgba(0, 0, 0, 0.5);
-        display: block;
-    }
-    .inRoom > .container > div.settings > button{
-        width: 100%;
-        height: 40px;
-        border: 0;
-        font-size: 20px;
-        font-weight: bold;
-        color: white;
-        text-align: center;
-        background-color: rgba(0, 0, 0, 0.3);
         display: block;
     }
     .winner{

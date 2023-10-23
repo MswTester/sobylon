@@ -508,6 +508,8 @@ server.on('connect', () => {
         })
     }
 
+    let isSettings = false
+
     const saveRoom = () => {
         myWorld.gravity = Number((document.querySelector('input[name="gravity"]') as HTMLInputElement).value)
         myWorld.speed = Number((document.querySelector('input[name="speed"]') as HTMLInputElement).value)
@@ -561,10 +563,8 @@ server.on('connect', () => {
                 <label for="maxlife">Max Life</label>
                 <input class="room-set" type="number" name="maxlife" value="${myWorld.maxlife}" step="0.1">
             </div>
-            <button class="save">Save</button>
+            <div class="blank"></div>
         `
-        const save = set.querySelector('button.save') as HTMLButtonElement
-        save.addEventListener('click', saveRoom)
         inRoomContainer.append(set)
     }
 
@@ -581,6 +581,8 @@ server.on('connect', () => {
             if(myWorld){
                 inRoomContainer.innerHTML = ''
                 loadPlayers()
+                isSettings = false
+                startGame.textContent = 'Start'
                 if(myWorld.ownerId == server.id){
                     startGame.classList.remove('hide')
                     settings.classList.remove('hide')
@@ -615,11 +617,15 @@ server.on('connect', () => {
     players.addEventListener('click', () => {
         inRoomContainer.innerHTML = ''
         loadPlayers()
+        isSettings = false
+        startGame.textContent = 'Start'
     })
 
     settings.addEventListener('click', () => {
         inRoomContainer.innerHTML = ''
         loadSettings()
+        isSettings = true
+        startGame.textContent = 'Save'
     })
 
     create.addEventListener('click', () => {
@@ -640,8 +646,11 @@ server.on('connect', () => {
     })
     startGame.addEventListener('click', () => {
         if(!myWorld) return;
-        server.emit('startGame', myWorld.ownerId)
-        inRoom.classList.add('hide')
+        if(isSettings) {saveRoom()}
+        else {
+            server.emit('startGame', myWorld.ownerId)
+            inRoom.classList.add('hide')
+        }
     })
 
     server.on('gameStarted', (world:World) => {
