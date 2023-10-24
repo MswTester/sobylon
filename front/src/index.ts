@@ -29,7 +29,7 @@ const initGame = async (thisWorld:World) => {
     const globalDamping = world.damping;
     const globalRestitution = world.restitution;
     let camRadious = isMobile() ? innerWidth > innerHeight ? 13 : 20 : 10;
-    const speed = world.speed*0.2;
+    const speed = world.speed*0.3;
     const jumpHeight = world.jumpHeight;
     const jumpCoolTime = world.jumpCooltime;
     const dashPower = world.dashPower
@@ -511,6 +511,7 @@ server.on('connect', () => {
     let isSettings = false
 
     const saveRoom = () => {
+        myWorld.map = (document.querySelector('select[name="map"]') as HTMLSelectElement).value
         myWorld.gravity = Number((document.querySelector('input[name="gravity"]') as HTMLInputElement).value)
         myWorld.speed = Number((document.querySelector('input[name="speed"]') as HTMLInputElement).value)
         myWorld.jumpHeight = Number((document.querySelector('input[name="jumpHeight"]') as HTMLInputElement).value)
@@ -527,6 +528,17 @@ server.on('connect', () => {
         const set = document.createElement('div')
         set.classList.add('settings')
         set.innerHTML = `
+            <div class="map">
+                <label for="map">Map</label>
+                <select class="room-set" name="map">
+                    <option value="spintower">Spin Tower</option>
+                    <option value="bridge">Bridge</option>
+                    <option value="thefield">The Field</option>
+                    <option value="blackhole">Black Hole</option>
+                    <option value="space">Space</option>
+                    <option value="donut">Donut</option>
+                </select>
+            </div>
             <div class="gravity">
                 <label for="gravity">Gravity</label>
                 <input class="room-set" type="number" name="gravity" value="${myWorld.gravity}" step="0.1">

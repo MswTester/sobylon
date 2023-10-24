@@ -54,9 +54,9 @@ io.on('connection', socket => {
             jumpHeight: 8,
             jumpCooltime: 300,
             dashPower: 15,
-            dashCooltime: 400,
+            dashCooltime: 300,
             damping: 0.5,
-            restitution: 1.5,
+            restitution: 2,
             maxlife: 1,
             name,
             map,
@@ -92,9 +92,10 @@ io.on('connection', socket => {
         socket.emit('getRooms', worlds);
     });
     socket.on('updateRoom', (changeWorld) => {
-        log('UPDATE_ROOM', socket, changeWorld.gravity, changeWorld.speed, changeWorld.jumpHeight, changeWorld.jumpCooltime, changeWorld.damping, changeWorld.restitution);
+        log('UPDATE_ROOM', socket, changeWorld.map, changeWorld.gravity, changeWorld.speed, changeWorld.jumpHeight, changeWorld.jumpCooltime, changeWorld.damping, changeWorld.restitution);
         const world = worlds.find(world => world.ownerId === socket.id);
         if (world) {
+            world.map = changeWorld.map;
             world.gravity = changeWorld.gravity;
             world.speed = changeWorld.speed;
             world.jumpHeight = changeWorld.jumpHeight;
