@@ -1,0 +1,16 @@
+{
+    "version":2,
+    "name":"sobylon",
+    "builds":[
+        {
+            "src":"back/dist/index.js",
+            "use":"@vercel/node"
+        }
+    ],
+    "routes":[
+        {
+            "src":"/(.*)",
+            "dest":"/back/dist/index.js"
+        }
+    ]
+}
